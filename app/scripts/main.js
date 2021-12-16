@@ -1,6 +1,5 @@
 let iniciarEntrenamiento = false;
 let arrPalosBtn = [];
-let arrIndicesBtn = [];
 let arrIndices = 'A,2,3,4,5,6,7,8,9,10,J,Q,K'.split(',');
 let arrPalos = 'spades,hearts,clubs,diams'.split(',');
 let templates = {};
@@ -10,59 +9,22 @@ let verificar = false;
 let contador = 1;
 let arrBarajaOrdenada = [];
 let arrBarajaMezclada;
-let indiceElegido = '';
 let paloElegido = '';
 let numeroErrores = 0;
 function getTemplates() {
-    for (var i = 0; i < 4; i++) {
+    for (let i = 0; i < 4; i++) {
         getTemplateById('palo' + i);
-    }
-    for (var i = 0; i < 13; i++) {
-        getTemplateById('indice' + arrIndices[i]);
     }
 }
 function getTemplateById(id) {
     templates[id] = document.getElementById(id).outerHTML;
 }
-function mezclaBtns() {
-    arrPalosBtn = _.shuffle([0, 1, 2, 3]);
-    arrIndicesBtn = _.shuffle(arrIndices);
-}
-function pintaPalos() {
-    let domPalos = $('#palos');
-    domPalos.empty();
-    for (var i = 0; i < 4; i++) {
-        var domPalo = $(templates['palo' + arrPalosBtn[i]]);
-        domPalo.attr('data-id', arrPalosBtn[i]);
-        domPalos.append(domPalo);
-    }
-}
-function pintaIndices() {
-    let domIndices0 = $('#indices0');
-    let domIndices1 = $('#indices1');
-    let domIndices2 = $('#indices2');
-    domIndices0.empty();
-    domIndices1.empty();
-    domIndices2.empty();
-    var domIndicesX = domIndices0;
-    for (var i = 0; i < 13; i++) {
-        var domIndice = $(templates['indice' + arrIndicesBtn[i]]);
-        if (i >= 10) {
-            domIndicesX = domIndices2;
-        } else if (i >= 5) {
-            domIndicesX = domIndices1;
-        }
-        domIndice.attr('data-id', arrIndicesBtn[i]);
-        domIndicesX.append(domIndice);
-        domIndicesX.append(' ');
-    }
-}
 function inicio() {
-    var errores = localStorage.getItem('ultimosErrores');
+    let errores = localStorage.getItem('ultimosErrores');
     if (!errores) {
         errores = '0';
     }
-    var ultimoTiempo = localStorage.getItem('utimoTiempo');
+    let ultimoTiempo = localStorage.getItem('utimoTiempo');
     if (!ultimoTiempo) {
         ultimoTiempo = '0m 0.00s';
     }
@@ -74,18 +36,14 @@ function inicio() {
 }
 function pintarCarta() {
     $('#count-card').text(contador + ' / 52');
-    $('#carta-indice').text(arrIndices[arrBarajaMezclada[contador - 1][0]]);
     $('#carta-palo').html('&' + arrPalos[arrBarajaMezclada[contador - 1][1]] + ';');
+    $('#carta-indice').text(arrIndices[arrBarajaMezclada[contador - 1][0]]);
     if (arrBarajaMezclada[contador - 1][1] % 2 == 1) {
         $('#carta-palo').addClass('text-danger');
     } else {
         $('#carta-palo').removeClass('text-danger');
     }
-    indiceElegido = '';
     paloElegido = '';
-    mezclaBtns();
-    pintaPalos();
-    pintaIndices();
 }
 function entrenamiento() {
     noerror();
@@ -122,16 +80,10 @@ function contadorTimer() {
         $('#span-tiempo').text(cronoString());
     }
 }
-function clickBtnIndice(e) {
-    let btn = $(e.target);
-    if (btn.prop('tagName') == 'BUTTON') {
-        indiceElegido = btn.attr('data-id');
-        noerror();
-        comprobar();
-    }
-}
 function clickBtnPalo(e) {
     let btn = $(e.target);
+    console.log(btn.attr('data-id'));
+    btn.blur();
     if (btn.prop('tagName') == 'BUTTON') {
         paloElegido = btn.attr('data-id');
         noerror();
@@ -139,21 +91,8 @@ function clickBtnPalo(e) {
     }
 }
 function comprobar() {
-    if (indiceElegido && paloElegido) {
-        var siguienteIndice = arrBarajaMezclada[contador - 1][0] - 4;
-        var siguientePalo = arrBarajaMezclada[contador - 1][1] + 1;
-        if (siguientePalo >= 4) {
-            siguientePalo = 0;
-        }
-        if (siguienteIndice < 0) {
-            siguienteIndice += 13;
-            siguientePalo += 1;
-            if (siguientePalo >= 4) {
-                siguientePalo -= 4;
-            }
-        }
-        var blnCorrecto = arrIndices[siguienteIndice] + '-' + siguientePalo == indiceElegido + '-' + paloElegido;
-        indiceElegido = '';
+    if (paloElegido) {
+        let blnCorrecto = arrBarajaMezclada[contador - 1][2] === parseInt(paloElegido);
         paloElegido = '';
         if (blnCorrecto) {
             correcto();
@@ -172,7 +111,6 @@ function cronoString() {
 }
 function correcto() {
     window.setTimeout(function () {
-        $('#siguiente-indice').text('Es la carta ');
         $('#siguiente-palo').text('');
     }, 500);
     contador++;
@@ -194,7 +132,6 @@ function error() {
 function noerror() {
     $('#error').hide();
     $('#noerror').show();
-    $('#siguiente-indice').text('Es la carta ' + indiceElegido);
     if (paloElegido != '') {
         $('#siguiente-palo').html('&' + arrPalos[parseInt(paloElegido)] + ';');
     } else {
@@ -207,12 +144,16 @@ function load() {
     $('#btn-stop').on('click', clickStop)
     getTemplates();
     window.setInterval(contadorTimer, 200);
-    for (var i = 0; i < 13; i++) {
-        for (var j = 0; j < 4; j++) {
-            arrBarajaOrdenada.push([i, j]);
+    let position = 15; //la 16ª
+    for (let j = 3; j >= 0; j--) {
+        for (let i = 0; i < 13; i++) {
+            arrBarajaOrdenada.push([i, j, Math.trunc(position / 13), position + 1]);
+            position += 3;
+            if (position > 51) {
+                position = position - 52;
+            }
         }
     }
-    $('#indices0,#indices1,#indices2').on('click', clickBtnIndice);
     $('#palos').on('click', clickBtnPalo);
 }
 $(function () {
